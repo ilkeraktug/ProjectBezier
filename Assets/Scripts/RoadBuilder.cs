@@ -36,7 +36,7 @@ public class RoadBuilder : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (Selection.activeObject != gameObject)
+        if (BezierCurvePoints.Count == 0 || Selection.activeObject != gameObject)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, 0.3f);
@@ -45,8 +45,11 @@ public class RoadBuilder : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Tools.current = Tool.None;
-        
+        if (BezierCurvePoints.Count != 0)
+        {
+            Tools.current = Tool.None;
+        }
+
         for (int i = 0; i < BezierCurvePoints.Count; ++i)
         {
             Vector3 CurrentPointPosition = BezierCurvePoints[i];
