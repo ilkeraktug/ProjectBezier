@@ -3,40 +3,72 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [ExecuteInEditMode]
 public class RoadBuilder : MonoBehaviour
 {
-    public int PointNumberPerSide = 4;
+    public int BezierCurveDegree = 4;
 
     [SerializeField] 
-    private List<Vector3> BezierCurvePoints;
+    public List<Vector3> LeftSideBezierCurvePoints;
+    
+    [SerializeField] 
+    public List<Vector3> RightSideBezierCurvePoints;
+
+    public int LineDrawSubstep = 256;
+
+    private float LeftLineLength;
+    private float RightLineLength;
 
     public void CreatePoints()
     {
-        BezierCurvePoints = new List<Vector3>();
+        LeftSideBezierCurvePoints = new List<Vector3>();
+        RightSideBezierCurvePoints = new List<Vector3>();
         
-        for (int i = 0; i < PointNumberPerSide * 2; ++i)
+        for (int i = 0; i < BezierCurveDegree; ++i)
         {
-            Vector3 NewPointLocation = new Vector3(10.0f * (i / PointNumberPerSide), 0.0f, 10.0f * (i % PointNumberPerSide));
+            Vector3 NewPointLocation = new Vector3(0.0f, 0.0f, 10.0f * (i % BezierCurveDegree));
 
-            BezierCurvePoints.Add(NewPointLocation);
+            LeftSideBezierCurvePoints.Add(NewPointLocation);
+
+            NewPointLocation.x += 10.0f;
+            
+            RightSideBezierCurvePoints.Add(NewPointLocation);
         }
+
+        Assert.IsTrue(LeftSideBezierCurvePoints.Count == RightSideBezierCurvePoints.Count);
     }
 
     public void ClearPoints()
     {
-        BezierCurvePoints.Clear();
+        LeftSideBezierCurvePoints.Clear();
+        RightSideBezierCurvePoints.Clear();
     }
 
-    public List<Vector3> GetBezierCurvePoints()
+    public void OnAnyLeftPointMoved()
     {
-        return BezierCurvePoints;
+        CalculateLeftBezierCurveLengths();
+    }
+    
+    public void OnAnyRightPointMoved()
+    {
+        CalculateRightBezierCurveLengths();
+    }
+    
+    private void CalculateLeftBezierCurveLengths()
+    {
+        LeftLineLength = BezierCurveHelper.CalculateBezierCurveLength(LeftSideBezierCurvePoints);
     }
 
+    private void CalculateRightBezierCurveLengths()
+    {
+        RightLineLength = BezierCurveHelper.CalculateBezierCurveLength(RightSideBezierCurvePoints);
+    }
+    
     private void OnDrawGizmos()
     {
-        if (BezierCurvePoints.Count == 0 || Selection.activeObject != gameObject)
+        if (LeftSideBezierCurvePoints.Count == 0 || Selection.activeObject != gameObject)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, 0.3f);
@@ -45,54 +77,25 @@ public class RoadBuilder : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (BezierCurvePoints.Count != 0)
+        if (LeftSideBezierCurvePoints.Count != 0)
         {
             Tools.current = Tool.None;
         }
 
-        for (int i = 0; i < BezierCurvePoints.Count; ++i)
-        {
-            Vector3 CurrentPointPosition = BezierCurvePoints[i];
-            bool bLeftLane = i < 4;
-
-            Gizmos.color = bLeftLane ? Color.green : Color.blue;
-            Gizmos.DrawWireSphere(CurrentPointPosition, 0.4f);
-        }
-    }
-}
-
-[CustomEditor(typeof(RoadBuilder))]
-public class RoadBuilderEditor : Editor
-{
-    void OnSceneGUI()
-    {
-        RoadBuilder asRoadBuilder = target as RoadBuilder;
-
-        if (asRoadBuilder)
-        {
-            List<Vector3> BezierCurvePoints = asRoadBuilder.GetBezierCurvePoints();
-            
-            for (int i = 0; i < BezierCurvePoints.Count; ++i)
-            {
-                Vector3 CurrentPointPosition = BezierCurvePoints[i];
-                BezierCurvePoints[i] = Handles.PositionHandle(CurrentPointPosition, asRoadBuilder.transform.rotation);
-            }
-        }
+        Gizmos.color = Color.green;
+        DrawWireSphereAtBezierCurveControlPoints(LeftSideBezierCurvePoints);
+        BezierCurveHelper.DrawBezierCurveOnGizmo(LeftSideBezierCurvePoints, LineDrawSubstep);
+        
+        Gizmos.color = Color.blue;
+        DrawWireSphereAtBezierCurveControlPoints(RightSideBezierCurvePoints);
+        BezierCurveHelper.DrawBezierCurveOnGizmo(RightSideBezierCurvePoints, LineDrawSubstep);
     }
 
-    public override void OnInspectorGUI()
+    private void DrawWireSphereAtBezierCurveControlPoints(List<Vector3> ControlPoints, float Radius = 0.4f)
     {
-        base.OnInspectorGUI();
-        
-        RoadBuilder asRoadBuilder = target as RoadBuilder;
-        
-        if (GUILayout.Button("CreatePoints"))
+        foreach (Vector3 CurrentControlPoint in ControlPoints)
         {
-            asRoadBuilder?.CreatePoints();
-        }
-        else if (GUILayout.Button("ClearPoints"))
-        {
-            asRoadBuilder?.ClearPoints();
+            Gizmos.DrawWireSphere(CurrentControlPoint, Radius);
         }
     }
 }
