@@ -1,25 +1,23 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public static class BezierCurveHelper
 {
-	public static Vector3 GetPointOnCurve(List<Vector3> BezierCurvePoints, float Alpha)
+	public static Vector3 GetPointOnCurve(List<Vector3> BezierCurveControlPoints, float Alpha)
 	{
 		Vector3 Point = Vector3.zero;
 
-		int BezierCurveDegree = BezierCurvePoints.Count - 1;
+		int BezierCurveDegree = BezierCurveControlPoints.Count - 1;
 		
-		for (int i = 0; i < BezierCurvePoints.Count; ++i)
+		for (int i = 0; i < BezierCurveControlPoints.Count; ++i)
 		{
-			Point += MathHelper.GetCombination(BezierCurveDegree, i) * Mathf.Pow(1 - Alpha, BezierCurveDegree - i) * Mathf.Pow(Alpha, i) * BezierCurvePoints[i];
+			Point += MathHelper.GetCombination(BezierCurveDegree, i) * Mathf.Pow(1 - Alpha, BezierCurveDegree - i) * Mathf.Pow(Alpha, i) * BezierCurveControlPoints[i];
 		}
 
 		return Point;
 	}
 
-	public static float CalculateBezierCurveLength(List<Vector3> BezierCurvePoints, int Substep = 256)
+	public static float CalculateBezierCurveLength(List<Vector3> BezierCurveControlPoints, int Substep = 256)
 	{
 		float Step = 1.0f / Substep;
 		
@@ -29,10 +27,10 @@ public static class BezierCurveHelper
 
 		for (int i = 0; i < Substep; ++i)
 		{
-			float NextAlpha = CurrentAlpha + Step;
+			float NextAlpha = Mathf.Clamp01(CurrentAlpha + Step);
 			
-			Vector3 CurrentPoint = BezierCurveHelper.GetPointOnCurve(BezierCurvePoints, CurrentAlpha);
-			Vector3 NextPoint    = BezierCurveHelper.GetPointOnCurve(BezierCurvePoints, NextAlpha);
+			Vector3 CurrentPoint = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, CurrentAlpha);
+			Vector3 NextPoint    = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, NextAlpha);
 			
 			TotalLength += Vector3.Distance(CurrentPoint, NextPoint);
             
@@ -41,12 +39,8 @@ public static class BezierCurveHelper
 
 		return TotalLength;
 	}
-	public static float GetAlphaFromDistance(float CurrentDistance, float MaxDistance)
-	{
-		return Mathf.Clamp01(CurrentDistance / MaxDistance);
-	}
 
-	public static void DrawBezierCurveOnGizmo(List<Vector3> BezierCurvePoints, int Substep = 256)
+	public static void DrawBezierCurveOnGizmo(List<Vector3> BezierCurveControlPoints, int Substep = 256)
 	{
 		float CurrentAlpha = 0.0f;
 
@@ -56,8 +50,8 @@ public static class BezierCurveHelper
 		{
 			float NextAlpha = CurrentAlpha + LineDrawStep;
             
-			Vector3 CurrentPoint = BezierCurveHelper.GetPointOnCurve(BezierCurvePoints, CurrentAlpha);
-			Vector3 NextPoint    = BezierCurveHelper.GetPointOnCurve(BezierCurvePoints, NextAlpha);
+			Vector3 CurrentPoint = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, CurrentAlpha);
+			Vector3 NextPoint    = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, NextAlpha);
 			
 			Gizmos.DrawLine(CurrentPoint, NextPoint);
 
