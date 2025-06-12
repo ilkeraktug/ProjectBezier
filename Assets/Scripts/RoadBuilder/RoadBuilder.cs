@@ -1,101 +1,115 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [ExecuteInEditMode]
 public class RoadBuilder : MonoBehaviour
 {
-    public int BezierCurveDegree = 4;
+	public int BezierCurveDegree = 4;
+	public int SplineComponentCalculateAccuracy = 512;
 
-    [SerializeField] 
-    public List<Vector3> LeftSideBezierCurvePoints;
-    
-    [SerializeField] 
-    public List<Vector3> RightSideBezierCurvePoints;
+	private SplineComponent LeftSideSpline;
+	private SplineComponent RightSideSpline;
 
-    public int LineDrawSubstep = 256;
+	private NodeManager NodeManager;
 
-    private float LeftLineLength;
-    private float RightLineLength;
+	private MeshBuilder MeshBuilder;
 
-    public void CreatePoints()
-    {
-        LeftSideBezierCurvePoints = new List<Vector3>();
-        RightSideBezierCurvePoints = new List<Vector3>();
-        
-        for (int i = 0; i < BezierCurveDegree; ++i)
-        {
-            Vector3 NewPointLocation = new Vector3(0.0f, 0.0f, 10.0f * (i % BezierCurveDegree));
+	public int Count_DELETE = 5;
+	public float Distance_DELETE = 3.0f;
 
-            LeftSideBezierCurvePoints.Add(NewPointLocation);
+	private void Start()
+	{
+		SplineComponent[] SplineComponents = gameObject.GetComponents<SplineComponent>();
 
-            NewPointLocation.x += 10.0f;
-            
-            RightSideBezierCurvePoints.Add(NewPointLocation);
-        }
+		if (SplineComponents.Length != 2)
+		{
+			foreach (var SplineComponent in SplineComponents)
+			{
+				Destroy(SplineComponent);
+			}
+			
+			LeftSideSpline = gameObject.AddComponent<SplineComponent>();
+			RightSideSpline = gameObject.AddComponent<SplineComponent>();
+		}
+		else
+		{
+			LeftSideSpline = SplineComponents[0];
+			RightSideSpline = SplineComponents[1];
+		}
 
-        Assert.IsTrue(LeftSideBezierCurvePoints.Count == RightSideBezierCurvePoints.Count);
-    }
+		NodeManager = gameObject.GetComponent<NodeManager>();
 
-    public void ClearPoints()
-    {
-        LeftSideBezierCurvePoints.Clear();
-        RightSideBezierCurvePoints.Clear();
-    }
+		if (!NodeManager)
+		{
+			NodeManager = gameObject.AddComponent<NodeManager>();
+		}
+		
+		MeshBuilder = gameObject.GetComponent<MeshBuilder>();
 
-    public void OnAnyLeftPointMoved()
-    {
-        CalculateLeftBezierCurveLengths();
-    }
-    
-    public void OnAnyRightPointMoved()
-    {
-        CalculateRightBezierCurveLengths();
-    }
-    
-    private void CalculateLeftBezierCurveLengths()
-    {
-        LeftLineLength = BezierCurveHelper.CalculateBezierCurveLength(LeftSideBezierCurvePoints);
-    }
+		if (!MeshBuilder)
+		{
+			MeshBuilder = gameObject.AddComponent<MeshBuilder>();
+		}
 
-    private void CalculateRightBezierCurveLengths()
-    {
-        RightLineLength = BezierCurveHelper.CalculateBezierCurveLength(RightSideBezierCurvePoints);
-    }
-    
-    private void OnDrawGizmos()
-    {
-        if (LeftSideBezierCurvePoints.Count == 0 || Selection.activeObject != gameObject)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, 0.3f);
-        }
-    }
+		LeftSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.green);
+		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
 
-    private void OnDrawGizmosSelected()
-    {
-        if (LeftSideBezierCurvePoints.Count != 0)
-        {
-            Tools.current = Tool.None;
-        }
+		CreatePoints();
+	}
 
-        Gizmos.color = Color.green;
-        DrawWireSphereAtBezierCurveControlPoints(LeftSideBezierCurvePoints);
-        BezierCurveHelper.DrawBezierCurveOnGizmo(LeftSideBezierCurvePoints, LineDrawSubstep);
-        
-        Gizmos.color = Color.blue;
-        DrawWireSphereAtBezierCurveControlPoints(RightSideBezierCurvePoints);
-        BezierCurveHelper.DrawBezierCurveOnGizmo(RightSideBezierCurvePoints, LineDrawSubstep);
-    }
+	public void CreatePoints()
+	{
+		LeftSideSpline.CreateControlPoints(transform.position);
+		RightSideSpline.CreateControlPoints(transform.position + transform.right * 10.0f);
+	}
 
-    private void DrawWireSphereAtBezierCurveControlPoints(List<Vector3> ControlPoints, float Radius = 0.4f)
-    {
-        foreach (Vector3 CurrentControlPoint in ControlPoints)
-        {
-            Gizmos.DrawWireSphere(CurrentControlPoint, Radius);
-        }
-    }
+	public void ClearSplineComponents()
+	{
+		LeftSideSpline.ClearControlPoints();
+		RightSideSpline.ClearControlPoints();
+	}
+
+	public void DivideSplinesByDistance(float Distance)
+	{
+		LeftSideSpline.DividePointsByDistance(Distance);
+		RightSideSpline.DividePointsByDistance(Distance);
+
+		NodeManager.CreateNodes();
+	}
+
+	public void DivideSplinesByCount(int Count)
+	{
+		LeftSideSpline.DividePointsByCount(Count);
+		RightSideSpline.DividePointsByCount(Count);
+
+		NodeManager.CreateNodes();
+	}
+
+	public void ResetSplineComponents()
+	{
+		ClearSplineComponents();
+
+		LeftSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.green);
+		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
+
+		CreatePoints();
+	}
+
+	private void OnDrawGizmos()
+	{
+		if (!LeftSideSpline.HasAnyPoints() || Selection.activeObject != gameObject)
+		{
+			Gizmos.color = Color.yellow;
+			Gizmos.DrawWireSphere(transform.position, 1.0f);
+		}
+	}
+
+	private void OnDrawGizmosSelected()
+	{
+		if (LeftSideSpline.HasAnyPoints())
+		{
+			Tools.current = Tool.None;
+		}
+	}
 }
