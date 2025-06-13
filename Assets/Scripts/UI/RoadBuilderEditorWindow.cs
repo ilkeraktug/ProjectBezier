@@ -106,7 +106,14 @@ public class RoadBuilderEditorWindow : EditorWindow
         GUILayout.Space(DefaultButtonHeight + DefaultButtonVerticalSpace);
         
         GUILayout.BeginVertical();
+
+        GUIContent[] toolbarContents = {
+            new GUIContent(ControlPointsHandling.DeleteControlPoints.ToString(), "Remove all control points when building, so, no further changes on the road"),
+            new GUIContent(ControlPointsHandling.KeepControlPoints.ToString(), "Preserve existing control points when building, you could modify the road after its built")
+        };
         
+        RoadBuilder.ControlPointsHandle = (ControlPointsHandling)GUILayout.Toolbar((int)RoadBuilder.ControlPointsHandle, toolbarContents);
+            
             GUILayout.BeginHorizontal();
         
                 if (GUILayout.Button("Count Mode"))

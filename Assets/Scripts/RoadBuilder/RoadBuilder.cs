@@ -1,10 +1,19 @@
+using System;
 using UnityEditor;
 using UnityEngine;
+
+public enum ControlPointsHandling
+{
+	DeleteControlPoints,
+	KeepControlPoints
+}
 
 [ExecuteInEditMode]
 public class RoadBuilder : MonoBehaviour
 {
 	public int SplineComponentCalculateAccuracy = 512;
+
+	public ControlPointsHandling ControlPointsHandle = ControlPointsHandling.KeepControlPoints;
 
 	private SplineComponent LeftSideSpline;
 	private SplineComponent RightSideSpline;
@@ -72,18 +81,16 @@ public class RoadBuilder : MonoBehaviour
 	{
 		LeftSideSpline.DividePointsByDistance(Distance);
 		RightSideSpline.DividePointsByDistance(Distance);
-		ClearSplineControlPoints();
-		
-		ActivateManagers();
+
+		OnSplinePointsDivided();
 	}
 
 	public void DivideSplinesByCount(int Count)
 	{
 		LeftSideSpline.DividePointsByCount(Count);
 		RightSideSpline.DividePointsByCount(Count);
-		ClearSplineControlPoints();
 
-		ActivateManagers();
+		OnSplinePointsDivided();
 	}
 
 	public bool IsSubdivided()
@@ -122,6 +129,16 @@ public class RoadBuilder : MonoBehaviour
 		
 		MeshBuilder.UpdateMesh();
 		MeshBuilder.bShouldRender = false;
+	}
+
+	private void OnSplinePointsDivided()
+	{
+		if (ControlPointsHandle == ControlPointsHandling.DeleteControlPoints)
+		{
+			ClearSplineControlPoints();
+		}
+
+		ActivateManagers();
 	}
 	private void OnDrawGizmos()
 	{
