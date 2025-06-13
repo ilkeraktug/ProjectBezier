@@ -36,6 +36,10 @@ public class RoadBuilderEditorWindow : EditorWindow
 
                     ShowCancelButton(RoadBuilder);
                 }
+                else if (RoadBuilder.BuiltRoad())
+                {
+                    ShowCancelButton(RoadBuilder);
+                }
             }
             else
             {
