@@ -9,6 +9,8 @@ public class RoadBuilderEditorWindow : EditorWindow
     private int DivideCount = 5;
     private float DivideDistance = 3.0f;
     
+    private static float DefaultButtonHeight = 20.0f;
+    private static float DefaultButtonVerticalSpace = 2.0f;
     
     [MenuItem("ADASTEC/RoadBuilder")]
     public static void ShowExample()
@@ -27,7 +29,13 @@ public class RoadBuilderEditorWindow : EditorWindow
             if (RoadBuilder)
             {
                 OnBeforeSubdivided(RoadBuilder);
-                OnAfterSubdivided(RoadBuilder);
+                
+                if (RoadBuilder.IsSubdivided())
+                {
+                    OnAfterSubdivided(RoadBuilder);
+
+                    ShowCancelButton(RoadBuilder);
+                }
             }
             else
             {
@@ -68,32 +76,69 @@ public class RoadBuilderEditorWindow : EditorWindow
 
     void OnBeforeSubdivided(RoadBuilder RoadBuilder)
     {
-        BezierCurveDegree = Mathf.Clamp(EditorGUILayout.DelayedIntField("Bezier Curve Degree", BezierCurveDegree), 4, 10);
+        GUIStyle centeredStyle = new GUIStyle(GUI.skin.label);
+        centeredStyle.alignment = TextAnchor.MiddleCenter;
+        GUILayout.Label("BEZIER CURVE", centeredStyle);
+        
+        GUILayout.Space(DefaultButtonHeight + DefaultButtonVerticalSpace);
+        
+        GUILayout.BeginHorizontal();
+        
+            BezierCurveDegree = Mathf.Clamp(EditorGUILayout.DelayedIntField("Bezier Curve Degree", BezierCurveDegree), 4, 10);
+            
+            GUILayout.Space(DefaultButtonHeight + DefaultButtonVerticalSpace);
+            
+            BezierCurveDegree = EditorGUILayout.IntSlider("Bezier Curve Degree", BezierCurveDegree, 4, 10);
+        
+        GUILayout.EndHorizontal();
+            
+        GUILayout.Space(DefaultButtonHeight);
         
         if (GUILayout.Button("Subdivision"))
         {
             RoadBuilder.Subdivide(BezierCurveDegree);
         }
-        if (GUILayout.Button("Cancel"))
-        {
-            RoadBuilder.CancelSubdivide();
-        }
+            
     }
 
     void OnAfterSubdivided(RoadBuilder RoadBuilder)
     {
-        DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("DivideCount", DivideCount), 1, 256);
+        GUILayout.Space(DefaultButtonHeight + DefaultButtonVerticalSpace);
         
-        if (GUILayout.Button("DivideCount"))
+        GUILayout.BeginVertical();
+        
+            GUILayout.BeginHorizontal();
+        
+                if (GUILayout.Button("Count Mode"))
+                {
+                    RoadBuilder.DivideSplinesByCount(DivideCount);
+                }
+                
+                if (GUILayout.Button("Distance Mode"))
+                {
+                    RoadBuilder.DivideSplinesByDistance(DivideDistance);
+                }
+        
+            GUILayout.EndHorizontal();
+        
+            GUILayout.BeginHorizontal();
+            
+                DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("Count", DivideCount), 1, 256);
+
+                GUILayout.Space(5);
+                
+                DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("Distance", DivideDistance), 1.0f, float.MaxValue);
+            
+            GUILayout.EndHorizontal();
+        
+        GUILayout.EndVertical();
+    }
+
+    void ShowCancelButton(RoadBuilder RoadBuilder)
+    {
+        if (GUILayout.Button("Cancel / Clear"))
         {
-            RoadBuilder.DivideSplinesByCount(DivideCount);
-        }
-        
-        DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("DivideDistance", DivideDistance), 1.0f, float.MaxValue);
-        
-        if (GUILayout.Button("DivideDistance"))
-        {
-            RoadBuilder.DivideSplinesByDistance(DivideDistance);
+            RoadBuilder.CancelSubdivide();
         }
     }
 }
