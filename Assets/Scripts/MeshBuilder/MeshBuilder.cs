@@ -1,19 +1,16 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
 [ExecuteInEditMode, 
  RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider)), 
- RequireComponent(typeof(NodeManager), typeof(SplineComponent))]
+ RequireComponent(typeof(SplineComponent))]
 public class MeshBuilder : MonoBehaviour
 {
+	public bool bShouldRender = false;
+	
 	private MeshFilter MeshFilter;
 	private MeshCollider MeshCollider;
-
-	private NodeManager NodeManager;
 	
 	private List<PointOnBezierCurveData> FirstSplinePointData;
 	private List<PointOnBezierCurveData> SecondSplinePointData;
@@ -21,8 +18,6 @@ public class MeshBuilder : MonoBehaviour
 	{
 		MeshFilter = GetComponent<MeshFilter>();
 		MeshCollider = GetComponent<MeshCollider>();
-		
-		NodeManager = GetComponent<NodeManager>();
 		
 		var SplineComponents = GetComponents<SplineComponent>();
 
@@ -38,7 +33,11 @@ public class MeshBuilder : MonoBehaviour
 		}
 	}
 
-	public void UpdateMesh(List<PointOnBezierCurveData> LeftNodes, List<PointOnBezierCurveData> RightNodes)
+	public void UpdateMesh()
+	{
+		UpdateMesh(SecondSplinePointData, FirstSplinePointData);
+	}
+	private void UpdateMesh(List<PointOnBezierCurveData> LeftNodes, List<PointOnBezierCurveData> RightNodes)
 	{
 		int Loop = Mathf.Min(LeftNodes.Count, RightNodes.Count);
 		
@@ -73,13 +72,16 @@ public class MeshBuilder : MonoBehaviour
         
 		mesh.vertices = MeshVertices.ToArray();
 		mesh.triangles = MeshIndices.ToArray();
-
+		
 		MeshFilter.mesh = mesh;
 		MeshCollider.sharedMesh = mesh;
 	}
 	
 	private void OnSplineComponentAnyControlPointMoved()
 	{
-		UpdateMesh(SecondSplinePointData, FirstSplinePointData);
+		if (bShouldRender)
+		{
+			UpdateMesh(SecondSplinePointData, FirstSplinePointData);
+		}
 	}
 }

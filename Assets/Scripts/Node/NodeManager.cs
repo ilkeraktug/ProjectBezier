@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -7,8 +5,8 @@ using UnityEngine.Assertions;
 [ExecuteInEditMode, RequireComponent(typeof(SplineComponent))]
 public class NodeManager : MonoBehaviour
 {
-    private List<PointOnBezierCurveData> FirstSplinePointData;
-    private List<PointOnBezierCurveData> SecondSplinePointData;
+    private SplineComponent FirstSplineRef;
+    private SplineComponent SecondSplineRef;
 
     public List<GameObject> FirstSideNodes;
     public List<GameObject> SecondSideNodes;
@@ -21,11 +19,11 @@ public class NodeManager : MonoBehaviour
 
         if (SplineComponents.Length >= 2)
         {
-            FirstSplinePointData  = SplineComponents[0].AllPointData;
-            SplineComponents[0].OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
+            FirstSplineRef  = SplineComponents[0];
+            FirstSplineRef.OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
             
-            SecondSplinePointData = SplineComponents[1].AllPointData;
-            SplineComponents[1].OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
+            SecondSplineRef = SplineComponents[1];
+            SecondSplineRef.OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
         }
 
         FirstSideNodes = new List<GameObject>();
@@ -34,17 +32,19 @@ public class NodeManager : MonoBehaviour
 
     public void CreateNodes()
     {
-        CreateNodesByData(FirstSplinePointData, FirstSideNodes,"NodeF_");
-        CreateNodesByData(SecondSplinePointData, SecondSideNodes,"NodeS_");
+        CreateNodesByData(FirstSplineRef.AllPointData, FirstSideNodes,"NodeF_");
+        CreateNodesByData(SecondSplineRef.AllPointData, SecondSideNodes,"NodeS_");
+    }
+    
+    public void DestroyAllNodes()
+    {
+        DestroyNodes(FirstSideNodes);
+        DestroyNodes(SecondSideNodes);
     }
 
     private void CreateNodesByData(List<PointOnBezierCurveData> Data, List<GameObject> Container, string NamePrefix = "Node_")
     {
-        foreach (var CurrentGameObject in Container)
-        {
-            DestroyImmediate(CurrentGameObject);
-        }
-        Container.Clear();
+        DestroyNodes(Container);
         
         int i = 0;
         foreach (PointOnBezierCurveData CurrentSplinePointData in Data)
@@ -59,6 +59,15 @@ public class NodeManager : MonoBehaviour
         }
     }
 
+    private void DestroyNodes(List<GameObject> Container)
+    {
+        foreach (var CurrentGameObject in Container)
+        {
+            DestroyImmediate(CurrentGameObject);
+        }
+        Container.Clear();
+    }
+    
     private void OnSplineComponentAnyControlPointMoved()
     {
         CreateNodes();
