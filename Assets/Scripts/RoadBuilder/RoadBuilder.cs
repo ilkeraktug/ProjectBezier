@@ -12,7 +12,7 @@ public class RoadBuilder : MonoBehaviour
 	private NodeManager NodeManager;
 
 	private MeshBuilder MeshBuilder;
-
+	
 	private void Start()
 	{
 		// Render mesh only works on origin.
@@ -83,6 +83,16 @@ public class RoadBuilder : MonoBehaviour
 
 		ActivateManagers();
 	}
+
+	public bool IsSubdivided()
+	{
+		return LeftSideSpline && LeftSideSpline.HasAnyPoints();
+	}
+
+	public bool BuiltRoad()
+	{
+		return MeshBuilder.bShouldRender;
+	}
 	
 	private void CreateSplineControlPoints()
 	{
@@ -108,14 +118,21 @@ public class RoadBuilder : MonoBehaviour
 	{
 		NodeManager.DestroyAllNodes();
 		
-		MeshBuilder.bShouldRender = false;
 		MeshBuilder.UpdateMesh();
+		MeshBuilder.bShouldRender = false;
 	}
 	private void OnDrawGizmos()
 	{
-		bool bSplineHasAnyPoint = LeftSideSpline && LeftSideSpline.HasAnyPoints();
+		bool bObjectIsSelected = Selection.activeObject == gameObject;
+		bool bAnyPartIsVisibleWhenSelected = IsSubdivided();
+		bool bAnyPartIsVisibleWhenNOTSelected = BuiltRoad();
+
+		bool bShouldHideWhenSelected = !(bAnyPartIsVisibleWhenSelected && bObjectIsSelected);
+		bool shouldHideWhenNOTSelected  = !bAnyPartIsVisibleWhenNOTSelected;
 		
-		if (!bSplineHasAnyPoint || Selection.activeObject != gameObject)
+		bool bShouldRenderYellowSphere = bShouldHideWhenSelected && shouldHideWhenNOTSelected;
+		
+		if (bShouldRenderYellowSphere)
 		{
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawWireSphere(transform.position, 1.0f);
