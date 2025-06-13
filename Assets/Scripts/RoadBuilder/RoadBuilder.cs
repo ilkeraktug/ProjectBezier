@@ -1,11 +1,9 @@
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
 [ExecuteInEditMode]
 public class RoadBuilder : MonoBehaviour
 {
-	public int BezierCurveDegree = 4;
 	public int SplineComponentCalculateAccuracy = 512;
 
 	private SplineComponent LeftSideSpline;
@@ -14,9 +12,6 @@ public class RoadBuilder : MonoBehaviour
 	private NodeManager NodeManager;
 
 	private MeshBuilder MeshBuilder;
-
-	public int Count_DELETE = 5;
-	public float Distance_DELETE = 3.0f;
 
 	private void Start()
 	{
@@ -51,51 +46,68 @@ public class RoadBuilder : MonoBehaviour
 		{
 			MeshBuilder = gameObject.AddComponent<MeshBuilder>();
 		}
+	}
 
+	public void Subdivide(int BezierCurveDegree)
+	{
 		LeftSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.green);
 		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
 
-		CreatePoints();
+		CreateSplineControlPoints();
 	}
-
-	public void CreatePoints()
+	
+	public void CancelSubdivide()
 	{
-		LeftSideSpline.CreateControlPoints(transform.position);
-		RightSideSpline.CreateControlPoints(transform.position + transform.right * 10.0f);
-	}
+		LeftSideSpline.ResetEverything();
+		RightSideSpline.ResetEverything();
 
-	public void ClearSplineComponents()
-	{
-		LeftSideSpline.ClearControlPoints();
-		RightSideSpline.ClearControlPoints();
+		DisableManagers();
 	}
-
 	public void DivideSplinesByDistance(float Distance)
 	{
 		LeftSideSpline.DividePointsByDistance(Distance);
 		RightSideSpline.DividePointsByDistance(Distance);
-
-		NodeManager.CreateNodes();
+		ClearSplineControlPoints();
+		
+		ActivateManagers();
 	}
 
 	public void DivideSplinesByCount(int Count)
 	{
 		LeftSideSpline.DividePointsByCount(Count);
 		RightSideSpline.DividePointsByCount(Count);
+		ClearSplineControlPoints();
 
-		NodeManager.CreateNodes();
+		ActivateManagers();
 	}
-
-	public void ResetSplineComponents()
+	
+	private void CreateSplineControlPoints()
 	{
-		ClearSplineComponents();
-
-		LeftSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.green);
-		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
-
-		CreatePoints();
+		LeftSideSpline.CreateControlPoints(transform.position);
+		RightSideSpline.CreateControlPoints(transform.position + transform.right * 10.0f);
+	}
+	
+	private void ClearSplineControlPoints()
+	{
+		LeftSideSpline.ClearControlPoints();
+		RightSideSpline.ClearControlPoints();
 	}
 
+	private void ActivateManagers()
+	{
+		NodeManager.CreateNodes();
+		
+		MeshBuilder.bShouldRender = true;
+		MeshBuilder.UpdateMesh();
+	}
+	
+	private void DisableManagers()
+	{
+		NodeManager.DestroyAllNodes();
+		
+		MeshBuilder.bShouldRender = false;
+		MeshBuilder.UpdateMesh();
+	}
 	private void OnDrawGizmos()
 	{
 		bool bSplineHasAnyPoint = LeftSideSpline && LeftSideSpline.HasAnyPoints();
