@@ -15,6 +15,9 @@ public class RoadBuilder : MonoBehaviour
 
 	private void Start()
 	{
+		// Render mesh only works on origin.
+		transform.position = Vector3.zero;
+		
 		SplineComponent[] SplineComponents = gameObject.GetComponents<SplineComponent>();
 
 		if (SplineComponents.Length != 2)
