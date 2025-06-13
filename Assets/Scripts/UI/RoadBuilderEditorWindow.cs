@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -30,7 +31,7 @@ public class RoadBuilderEditorWindow : EditorWindow
             }
             else
             {
-                OnSelectedObjectHasNoRoadBuilderScript();
+                OnSelectedObjectHasNoRoadBuilderScript(SelectedObject);
             }
         }
         else
@@ -39,14 +40,30 @@ public class RoadBuilderEditorWindow : EditorWindow
         }
     }
 
+    public void Update()
+    {
+        // RoadBuilderEditorWindow::OnGuI is not called when the window is out of focus. (I think)
+        // I need user to select a gameObjects that contains RoadBuilder script to modify the curves.
+        // When user select a gameObject, obiviosly the Window lost focus, thus do not update its content. In order to prevent confusion on user end, I want to update window contents as soon as possible.
+        Repaint();
+    }
+
     void OnNoObjectIsSelected()
     {
         GUILayout.Label("Please select a object!");
     }
 
-    void OnSelectedObjectHasNoRoadBuilderScript()
+    void OnSelectedObjectHasNoRoadBuilderScript(GameObject SelectedObject)
     {
+        EditorGUILayout.BeginVertical(new GUIStyle());
         GUILayout.Label("Could not find <b>RoadBuilder</b> script!");
+
+        if (GUILayout.Button("Add RoadBuilder script"))
+        {
+            SelectedObject.AddComponent<RoadBuilder>();
+        }
+
+        GUILayout.EndVertical();
     }
 
     void OnBeforeSubdivided(RoadBuilder RoadBuilder)
