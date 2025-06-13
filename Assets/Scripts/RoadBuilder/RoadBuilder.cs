@@ -100,7 +100,7 @@ public class RoadBuilder : MonoBehaviour
 
 	public bool BuiltRoad()
 	{
-		return MeshBuilder.bShouldRender;
+		return MeshBuilder && MeshBuilder.bShouldRender;
 	}
 	
 	private void CreateSplineControlPoints()
