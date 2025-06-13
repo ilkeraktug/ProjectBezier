@@ -98,7 +98,9 @@ public class RoadBuilder : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
-		if (!LeftSideSpline.HasAnyPoints() || Selection.activeObject != gameObject)
+		bool bSplineHasAnyPoint = LeftSideSpline && LeftSideSpline.HasAnyPoints();
+		
+		if (!bSplineHasAnyPoint || Selection.activeObject != gameObject)
 		{
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawWireSphere(transform.position, 1.0f);
