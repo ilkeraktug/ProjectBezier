@@ -1,11 +1,11 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 enum SplineDivideType
 {
+    NONE,
     DivideByCount,
     DivideByDistance
 }
@@ -36,13 +36,15 @@ public class SplineComponent : MonoBehaviour
 
     public Color GizmoDrawColor = Color.green;
     
+    [NonSerialized]
     public List<Vector3> BezierCurveControlPoints = new List<Vector3>();
     
+    [NonSerialized]
     public List<PointOnBezierCurveData> AllPointData = new List<PointOnBezierCurveData>();
     
     public UnityAction OnAnyControlPointMovedAction;
 
-    private SplineDivideType LastDivideType;
+    private SplineDivideType LastDivideType = SplineDivideType.NONE;
 
     private int LastDivideCount;
     private float LastDivideDistance;
@@ -66,9 +68,20 @@ public class SplineComponent : MonoBehaviour
         }
     }
 
+    public void ResetEverything()
+    {
+        ClearControlPoints();
+        ClearPointData();
+        
+        LastDivideType = SplineDivideType.NONE;
+    }
     public void ClearControlPoints()
     {
         BezierCurveControlPoints.Clear();
+    }
+    public void ClearPointData()
+    {
+        AllPointData.Clear();
     }
 
     public bool HasAnyPoints()
