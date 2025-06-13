@@ -55,6 +55,8 @@ public class SplineComponent : MonoBehaviour
         Accuracy          = InAccuracy;
         
         GizmoDrawColor    = InGizmoDrawColor;
+
+        ResetEverything();
     }
     public void CreateControlPoints(Vector3 InitialPosition)
     {

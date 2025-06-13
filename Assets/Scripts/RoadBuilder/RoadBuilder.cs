@@ -57,6 +57,8 @@ public class RoadBuilder : MonoBehaviour
 		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
 
 		CreateSplineControlPoints();
+
+		DisableManagers();
 	}
 	
 	public void CancelSubdivide()
