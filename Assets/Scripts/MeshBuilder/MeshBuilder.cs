@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine;
  RequireComponent(typeof(SplineComponent))]
 public class MeshBuilder : MonoBehaviour
 {
+	[NonSerialized]
 	public bool bShouldRender = false;
 	
 	private MeshFilter MeshFilter;
