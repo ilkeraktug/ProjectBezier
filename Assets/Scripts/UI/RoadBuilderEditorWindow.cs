@@ -68,7 +68,7 @@ public class RoadBuilderEditorWindow : EditorWindow
     void OnSelectedObjectHasNoRoadBuilderScript(GameObject SelectedObject)
     {
         EditorGUILayout.BeginVertical(new GUIStyle());
-        GUILayout.Label("Could not find <b>RoadBuilder</b> script!");
+        GUILayout.Label("Could not find RoadBuilder script!");
 
         if (GUILayout.Button("Add RoadBuilder script"))
         {
