@@ -1,4 +1,4 @@
-using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +14,10 @@ public class RoadBuilder : MonoBehaviour
 	public int SplineComponentCalculateAccuracy = 512;
 
 	public ControlPointsHandling ControlPointsHandle = ControlPointsHandling.KeepControlPoints;
-
+	
+	// Automatically Move Spline Point
+	public bool bAutoMovePoints = false;
+	
 	private bool SplinesIntersect = false;
 
 	private SplineComponent LeftSideSpline;
@@ -93,9 +96,14 @@ public class RoadBuilder : MonoBehaviour
 	}
 	public void DivideSplinesByDistance(float Distance)
 	{
+		if (bAutoMovePoints)
+		{
+			HandleAutomaticallyMoveSplineControlPoints();
+		}
+
 		LeftSideSpline.DividePointsByDistance(Distance);
 		RightSideSpline.DividePointsByDistance(Distance);
-
+		
 		OnSplinePointsDivided();
 	}
 
@@ -161,6 +169,93 @@ public class RoadBuilder : MonoBehaviour
 	{
 		SplinesIntersect = BezierCurveHelper.DoesBezierCurvesIntersectsAnyPoint(LeftSideSpline.AllPointData, RightSideSpline.AllPointData);
 	}
+
+	private void HandleAutomaticallyMoveSplineControlPoints()
+	{
+		PointOnBezierCurveData LeftSplineFirstCurveData = LeftSideSpline.AllPointData.First();
+		PointOnBezierCurveData LeftSplineLastCurveData  = LeftSideSpline.AllPointData.Last();
+
+		PointOnBezierCurveData RightSplineFirstCurveData = RightSideSpline.AllPointData.First();
+		PointOnBezierCurveData RightSplineLastCurveData  = RightSideSpline.AllPointData.Last();
+		
+		float LeftSplineLengthRatio = LengthRatio(LeftSideSpline);
+		float RightSplineLengthRatio = LengthRatio(RightSideSpline);
+
+		float DistanceBetweenFirstPoints = Vector3.Distance(LeftSplineFirstCurveData.WorldPosition, RightSplineFirstCurveData.WorldPosition);
+		float DistanceBetweenLastPoints = Vector3.Distance(LeftSplineLastCurveData.WorldPosition, RightSplineLastCurveData.WorldPosition);
+		
+		bool bMoveFirstControlPoint = DistanceBetweenFirstPoints > DistanceBetweenLastPoints;
+
+		float LengthDifference = CalculateSplineLengthDifference();
+		bool bAddLeftSpline = LengthDifference <= 0;
+		
+		if (bMoveFirstControlPoint)
+		{
+			if (bAddLeftSpline)
+			{
+				AddSplinePointFront(RightSideSpline, LeftSideSpline, LengthDifference / RightSplineLengthRatio);
+			}
+			else
+			{
+				AddSplinePointFront(LeftSideSpline, RightSideSpline, -LengthDifference / LeftSplineLengthRatio);
+			}
+		}
+		else
+		{
+			if (bAddLeftSpline)
+			{
+				AddSplinePointLast(RightSideSpline, LeftSideSpline, -LengthDifference / RightSplineLengthRatio);
+			}
+			else
+			{
+				AddSplinePointLast(LeftSideSpline, RightSideSpline, LengthDifference / LeftSplineLengthRatio);
+			}
+		}
+	}
+
+	private float LengthRatio(SplineComponent SplineComponent)
+	{
+		PointOnBezierCurveData SplineFirstCurveData = SplineComponent.AllPointData.First();
+		PointOnBezierCurveData SplineLastCurveData  = SplineComponent.AllPointData.Last();
+
+		float SplineLength = SplineLastCurveData.Distance;
+		
+		float StartToEndDistance = Vector3.Distance(SplineFirstCurveData.WorldPosition, SplineLastCurveData.WorldPosition);
+		return SplineLength / StartToEndDistance;
+	}
+
+	private float CalculateSplineLengthDifference()
+	{
+		float LeftSplineLength = LeftSideSpline.AllPointData.Last().Distance;
+		float RightSplineLength = RightSideSpline.AllPointData.Last().Distance;
+		
+		return LeftSplineLength - RightSplineLength;
+	}
+	
+	private void AddSplinePointFront(SplineComponent From, SplineComponent To, float Scale)
+	{
+		if (From.BezierCurveControlPoints.Count > 1 && To.BezierCurveControlPoints.Count > 0)
+		{
+			Vector3 FirstControlPointPosition = To.BezierCurveControlPoints[0];
+
+			Vector3 FirstTangent = From.AllPointData[1].Tangent;
+
+			To.BezierCurveControlPoints[0] = FirstControlPointPosition + FirstTangent * Scale;
+		}
+	}
+
+	private void AddSplinePointLast(SplineComponent From, SplineComponent To, float Scale)
+	{
+		if (From.BezierCurveControlPoints.Count > 0 && To.BezierCurveControlPoints.Count > 0)
+		{
+			Vector3 LastControlPointPosition = To.BezierCurveControlPoints[To.BezierCurveControlPoints.Count - 1];
+			
+			Vector3 LastTangent = From.AllPointData.Last().Tangent;
+
+			To.BezierCurveControlPoints[To.BezierCurveControlPoints.Count - 1] = LastControlPointPosition + LastTangent * Scale;
+		}
+	}
+	
 	private void OnDrawGizmos()
 	{
 		bool bObjectIsSelected = Selection.activeObject == gameObject;

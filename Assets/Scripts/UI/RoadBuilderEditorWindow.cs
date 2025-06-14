@@ -68,12 +68,13 @@ public class RoadBuilderEditorWindow : EditorWindow
     void OnSelectedObjectHasNoRoadBuilderScript(GameObject SelectedObject)
     {
         EditorGUILayout.BeginVertical(new GUIStyle());
-        GUILayout.Label("Could not find RoadBuilder script!");
+            
+            GUILayout.Label("Could not find RoadBuilder script!");
 
-        if (GUILayout.Button("Add RoadBuilder script"))
-        {
-            SelectedObject.AddComponent<RoadBuilder>();
-        }
+            if (GUILayout.Button("Add RoadBuilder script"))
+            {
+                SelectedObject.AddComponent<RoadBuilder>();
+            }
 
         GUILayout.EndVertical();
     }
@@ -132,30 +133,37 @@ public class RoadBuilderEditorWindow : EditorWindow
             
             GUILayout.BeginHorizontal();
     
-                    bool bCountModeButtonPressed = GUILayout.Button("Count Mode");
+                bool bCountModeButtonPressed = GUILayout.Button("Count Mode");
                 
-                    if (bCountModeButtonPressed && !bTwoSplinesIntersects)
-                    {
-                        RoadBuilder.DivideSplinesByCount(DivideCount);
-                    }
-                    
-                    bool bDistanceModeButtonPressed = GUILayout.Button("Distance Mode");
-                    
-                    if (bDistanceModeButtonPressed && !bTwoSplinesIntersects)
-                    {
-                        RoadBuilder.DivideSplinesByDistance(DivideDistance);
-                    }
+                if (bCountModeButtonPressed && !bTwoSplinesIntersects)
+                {
+                    RoadBuilder.DivideSplinesByCount(DivideCount);
+                }
+                
+                bool bDistanceModeButtonPressed = GUILayout.Button("Distance Mode");
+                
+                if (bDistanceModeButtonPressed && !bTwoSplinesIntersects)
+                {
+                    RoadBuilder.DivideSplinesByDistance(DivideDistance);
+                }
                     
             GUILayout.EndHorizontal();
         
             GUILayout.BeginHorizontal();
                 
-                    DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("Count", DivideCount), 1, 256);
-    
-                    GUILayout.Space(5);
-                    
-                    DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("Distance", DivideDistance), 1.0f, float.MaxValue);
+                DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("Count", DivideCount), 1, 256);
                 
+                GUILayout.BeginHorizontal();
+
+                    GUILayout.FlexibleSpace();
+                
+                    DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("Distance", DivideDistance), 1.0f, float.MaxValue);
+                    
+                    GUIContent AutoMovePointsToggleContent = new GUIContent("AutoMovePoints", "If selected, reposition control points.");
+                    RoadBuilder.bAutoMovePoints = GUILayout.Toggle(RoadBuilder.bAutoMovePoints, AutoMovePointsToggleContent);
+                
+                GUILayout.EndHorizontal();
+                    
             GUILayout.EndHorizontal();
         
         GUILayout.EndVertical();

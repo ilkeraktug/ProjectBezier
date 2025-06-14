@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -13,19 +14,13 @@ enum SplineDivideType
 [Serializable]
 public struct PointOnBezierCurveData
 {
-    public PointOnBezierCurveData(Vector3 InPosition)
-    {
-        Distance = 0.0f;
-        Alpha = 0.0f;
-        
-        WorldPosition = InPosition;
-    }
-    
     public float Distance;
 
     public float Alpha;
 
     public Vector3 WorldPosition;
+    
+    public Vector3 Tangent;
 }
 
 public class SplineComponent : MonoBehaviour
@@ -73,7 +68,7 @@ public class SplineComponent : MonoBehaviour
     public void ResetEverything()
     {
         ClearControlPoints();
-        ClearPointData();
+        ClearAllPointData();
         
         LastDivideType = SplineDivideType.NONE;
     }
@@ -81,7 +76,7 @@ public class SplineComponent : MonoBehaviour
     {
         BezierCurveControlPoints.Clear();
     }
-    public void ClearPointData()
+    public void ClearAllPointData()
     {
         AllPointData.Clear();
     }
@@ -132,6 +127,7 @@ public class SplineComponent : MonoBehaviour
         FirstCurveData.Alpha = 0.0f;
         FirstCurveData.Distance = 0.0f;
         FirstCurveData.WorldPosition = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, 0.0f);
+        FirstCurveData.Tangent = Vector3.zero;
         
         AllPointData.Add(FirstCurveData);
         
@@ -157,6 +153,7 @@ public class SplineComponent : MonoBehaviour
                 CurveData.Alpha = CurrentAlpha;
                 CurveData.Distance = TotalDistance;
                 CurveData.WorldPosition = CurrentPointOnBezier;
+                CurveData.Tangent = (NextPointOnBezier - CurrentPointOnBezier).normalized;
                 
                 AllPointData.Add(CurveData);
             
@@ -168,6 +165,7 @@ public class SplineComponent : MonoBehaviour
         LastCurveData.Alpha = 1.0f;
         LastCurveData.Distance = BezierCurveHelper.CalculateBezierCurveLength(BezierCurveControlPoints);
         LastCurveData.WorldPosition = BezierCurveHelper.GetPointOnCurve(BezierCurveControlPoints, 1.0f);
+        LastCurveData.Tangent = (LastCurveData.WorldPosition - AllPointData.Last().WorldPosition).normalized;
         
         AllPointData.Add(LastCurveData);
     }
