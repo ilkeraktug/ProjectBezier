@@ -66,8 +66,12 @@ public class RoadBuilder : MonoBehaviour
 		RightSideSpline.Init(BezierCurveDegree, SplineComponentCalculateAccuracy, Color.blue);
 
 		CreateSplineControlPoints();
-
+		
 		DisableManagers();
+
+		// Divided curves to detect intersection between 2 splines
+		LeftSideSpline.DividePointsByDistance(2.0f);
+		RightSideSpline.DividePointsByDistance(2.0f);
 	}
 	
 	public void CancelSubdivide()
@@ -76,6 +80,11 @@ public class RoadBuilder : MonoBehaviour
 		RightSideSpline.ResetEverything();
 
 		DisableManagers();
+	}
+
+	public bool TwoSplineIntersectAtAnyPoint()
+	{
+		return BezierCurveHelper.DoesBezierCurvesIntersectsAnyPoint(LeftSideSpline.AllPointData, RightSideSpline.AllPointData);
 	}
 	public void DivideSplinesByDistance(float Distance)
 	{
@@ -117,6 +126,7 @@ public class RoadBuilder : MonoBehaviour
 
 	private void ActivateManagers()
 	{
+		NodeManager.bShouldCreateNodes = true;
 		NodeManager.CreateNodes();
 		
 		MeshBuilder.bShouldRender = true;
@@ -125,6 +135,7 @@ public class RoadBuilder : MonoBehaviour
 	
 	private void DisableManagers()
 	{
+		NodeManager.bShouldCreateNodes = false;
 		NodeManager.DestroyAllNodes();
 		
 		MeshBuilder.UpdateMesh();

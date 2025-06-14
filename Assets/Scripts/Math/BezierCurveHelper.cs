@@ -58,4 +58,27 @@ public static class BezierCurveHelper
 			CurrentAlpha = NextAlpha;
 		}
 	}
+
+	public static bool DoesBezierCurvesIntersectsAnyPoint(List<PointOnBezierCurveData> FirstBezierPointData, List<PointOnBezierCurveData> SecondBezierPointData, int Substep = 256)
+	{
+		for (int i = 0; i < FirstBezierPointData.Count - 1; ++i)
+		{
+			Vector2 First_FirstPoint = new Vector2(FirstBezierPointData[i].WorldPosition.x, FirstBezierPointData[i].WorldPosition.z);
+			Vector2 First_SecondPoint = new Vector2(FirstBezierPointData[i + 1].WorldPosition.x, FirstBezierPointData[i + 1].WorldPosition.z);
+			
+			for (int j = 0; j < SecondBezierPointData.Count - 1; ++j)
+			{
+				Vector2 Second_FirstPoint = new Vector2(SecondBezierPointData[j].WorldPosition.x, SecondBezierPointData[j].WorldPosition.z);
+				Vector2 Second_SecondPoint = new Vector2(SecondBezierPointData[j + 1].WorldPosition.x, SecondBezierPointData[j + 1].WorldPosition.z);
+
+				if (MathHelper.DoTwoLinesIntersect(First_FirstPoint, First_SecondPoint, Second_FirstPoint,
+					    Second_SecondPoint))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 }

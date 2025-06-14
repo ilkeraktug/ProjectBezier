@@ -62,13 +62,13 @@ public class RoadBuilderEditorWindow : EditorWindow
 
     void OnNoObjectIsSelected()
     {
-        GUILayout.Label("Please select a object!");
+        GUILayout.Label("Please select an object!");
     }
 
     void OnSelectedObjectHasNoRoadBuilderScript(GameObject SelectedObject)
     {
         EditorGUILayout.BeginVertical(new GUIStyle());
-        GUILayout.Label("Could not find <b>RoadBuilder</b> script!");
+        GUILayout.Label("Could not find RoadBuilder script!");
 
         if (GUILayout.Button("Add RoadBuilder script"))
         {
@@ -109,37 +109,53 @@ public class RoadBuilderEditorWindow : EditorWindow
     {
         GUILayout.Space(DefaultButtonHeight + DefaultButtonVerticalSpace);
         
+        bool bTwoSplinesIntersects = RoadBuilder.TwoSplineIntersectAtAnyPoint();
+
+        if (bTwoSplinesIntersects)
+        {
+            // Aslında buradaki amacım Unreal Engide'de ki gibi ekrana kırmızı uyarı yazısı eklemekti, Unity'de yapmayı bulamadım.
+            // O nedenle EditorWindow da butonların üstüne küçük bir yazı şeklinde ekledim.
+            Color defaultColor = GUI.color;
+            GUI.color = Color.red;
+            GUILayout.Label("Spline intersection detected: Cannot build road");
+            GUI.color = defaultColor;
+        }
+        
         GUILayout.BeginVertical();
 
-        GUIContent[] toolbarContents = {
-            new GUIContent(ControlPointsHandling.DeleteControlPoints.ToString(), "Remove all control points when building, so, no further changes on the road"),
-            new GUIContent(ControlPointsHandling.KeepControlPoints.ToString(), "Preserve existing control points when building, you could modify the road after its built")
-        };
-        
-        RoadBuilder.ControlPointsHandle = (ControlPointsHandling)GUILayout.Toolbar((int)RoadBuilder.ControlPointsHandle, toolbarContents);
+            GUIContent[] toolbarContents = {
+                new GUIContent(ControlPointsHandling.DeleteControlPoints.ToString(), "Remove all control points when building, so, no further changes on the road"),
+                new GUIContent(ControlPointsHandling.KeepControlPoints.ToString(), "Preserve existing control points when building, you could modify the road after its built")
+            };
+            
+            RoadBuilder.ControlPointsHandle = (ControlPointsHandling)GUILayout.Toolbar((int)RoadBuilder.ControlPointsHandle, toolbarContents);
             
             GUILayout.BeginHorizontal();
-        
-                if (GUILayout.Button("Count Mode"))
-                {
-                    RoadBuilder.DivideSplinesByCount(DivideCount);
-                }
+    
+                    bool bCountModeButtonPressed = GUILayout.Button("Count Mode");
                 
-                if (GUILayout.Button("Distance Mode"))
-                {
-                    RoadBuilder.DivideSplinesByDistance(DivideDistance);
-                }
-        
+                    if (bCountModeButtonPressed && !bTwoSplinesIntersects)
+                    {
+                        RoadBuilder.DivideSplinesByCount(DivideCount);
+                    }
+                    
+                    bool bDistanceModeButtonPressed = GUILayout.Button("Distance Mode");
+                    
+                    if (bDistanceModeButtonPressed && !bTwoSplinesIntersects)
+                    {
+                        RoadBuilder.DivideSplinesByDistance(DivideDistance);
+                    }
+                    
             GUILayout.EndHorizontal();
         
             GUILayout.BeginHorizontal();
-            
-                DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("Count", DivideCount), 1, 256);
-
-                GUILayout.Space(5);
                 
-                DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("Distance", DivideDistance), 1.0f, float.MaxValue);
-            
+                    DivideCount = Mathf.Clamp(EditorGUILayout.DelayedIntField("Count", DivideCount), 1, 256);
+    
+                    GUILayout.Space(5);
+                    
+                    DivideDistance = Mathf.Clamp(EditorGUILayout.DelayedFloatField("Distance", DivideDistance), 1.0f, float.MaxValue);
+                
             GUILayout.EndHorizontal();
         
         GUILayout.EndVertical();

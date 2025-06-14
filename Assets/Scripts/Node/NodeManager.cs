@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -10,6 +11,9 @@ public class NodeManager : MonoBehaviour
 
     public List<GameObject> FirstSideNodes;
     public List<GameObject> SecondSideNodes;
+
+    [NonSerialized]
+    public bool bShouldCreateNodes = false;
 
     private void Start()
     {
@@ -45,17 +49,20 @@ public class NodeManager : MonoBehaviour
     private void CreateNodesByData(List<PointOnBezierCurveData> Data, List<GameObject> Container, string NamePrefix = "Node_")
     {
         DestroyNodes(Container);
-        
-        int i = 0;
-        foreach (PointOnBezierCurveData CurrentSplinePointData in Data)
-        {
-            GameObject NewNode = new GameObject(NamePrefix + i++);
-            NewNode.AddComponent<Node>();
-            
-            NewNode.transform.position = CurrentSplinePointData.WorldPosition;
-            NewNode.transform.SetParent(transform);
 
-            Container.Add(NewNode);
+        if (bShouldCreateNodes)
+        {
+            int i = 0;
+            foreach (PointOnBezierCurveData CurrentSplinePointData in Data)
+            {
+                GameObject NewNode = new GameObject(NamePrefix + i++);
+                NewNode.AddComponent<Node>();
+
+                NewNode.transform.position = CurrentSplinePointData.WorldPosition;
+                NewNode.transform.SetParent(transform);
+
+                Container.Add(NewNode);
+            }
         }
     }
 
