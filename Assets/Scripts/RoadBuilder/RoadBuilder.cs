@@ -15,6 +15,8 @@ public class RoadBuilder : MonoBehaviour
 
 	public ControlPointsHandling ControlPointsHandle = ControlPointsHandling.KeepControlPoints;
 
+	private bool SplinesIntersect = false;
+
 	private SplineComponent LeftSideSpline;
 	private SplineComponent RightSideSpline;
 
@@ -45,6 +47,9 @@ public class RoadBuilder : MonoBehaviour
 			RightSideSpline = SplineComponents[1];
 		}
 
+		LeftSideSpline.OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
+		RightSideSpline.OnAnyControlPointMovedAction += OnSplineComponentAnyControlPointMoved;
+		
 		NodeManager = gameObject.GetComponent<NodeManager>();
 
 		if (!NodeManager)
@@ -84,7 +89,7 @@ public class RoadBuilder : MonoBehaviour
 
 	public bool TwoSplineIntersectAtAnyPoint()
 	{
-		return BezierCurveHelper.DoesBezierCurvesIntersectsAnyPoint(LeftSideSpline.AllPointData, RightSideSpline.AllPointData);
+		return SplinesIntersect;
 	}
 	public void DivideSplinesByDistance(float Distance)
 	{
@@ -150,6 +155,11 @@ public class RoadBuilder : MonoBehaviour
 		}
 
 		ActivateManagers();
+	}
+
+	private void OnSplineComponentAnyControlPointMoved()
+	{
+		SplinesIntersect = BezierCurveHelper.DoesBezierCurvesIntersectsAnyPoint(LeftSideSpline.AllPointData, RightSideSpline.AllPointData);
 	}
 	private void OnDrawGizmos()
 	{
